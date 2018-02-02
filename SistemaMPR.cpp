@@ -116,7 +116,7 @@ TelaMPR::TelaMPR(HWND handle)
 	interactor = vtkSmartPointer<vtkWin32RenderWindowInteractor>::New();
 	interactor->SetRenderWindow(renderWindow);
 	interactor->InstallMessageProcOn();
-	style = vtkSmartPointer<vtkInteractorStyleTrackballActor>::New();
+	style = vtkSmartPointer<myResliceInteractionStyle>::New();
 	interactor->SetInteractorStyle(style);
 
 

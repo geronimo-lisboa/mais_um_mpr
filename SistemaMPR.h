@@ -1,13 +1,13 @@
 #pragma once
 #include "stdafx.h"
-
+#include "myResliceInteractionStyle.h"
 class TelaMPR {
 private:
 	vtkSmartPointer<vtkOpenGLRenderer> rendererLayerWidget;
 	vtkSmartPointer<vtkOpenGLRenderer> rendererLayerImage;
 	vtkSmartPointer<vtkWin32OpenGLRenderWindow> renderWindow;
 	vtkSmartPointer<vtkWin32RenderWindowInteractor> interactor;
-	vtkSmartPointer<vtkInteractorStyleTrackballActor> style;
+	vtkSmartPointer<myResliceInteractionStyle> style;
 
 	vtkSmartPointer<vtkCubeSource> planeSource1, planeSource2, dummyImagePlane;
 	vtkSmartPointer<vtkPolyDataMapper> planeSourceMapper1, planeSourceMapper2, dummyImagePlaneMapper;
