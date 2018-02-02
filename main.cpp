@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 	char* idExame = "idExame"; char* idSerie = "idSerie";
 	std::shared_ptr<SistemaMPR> sistemaMpr = std::make_shared<SistemaMPR>(idExame, idSerie);
 	sistemaMpr->CreateRenderers(0, 0, 0);
-	sistemaMpr->SetImage(imagemOriginal);
+	sistemaMpr->SetImage(imagemOriginal, imagemImportadaPraVTK);
 
 	//A tela dummy
 	vtkSmartPointer<vtkRenderer> rendererDummy = vtkSmartPointer<vtkRenderer>::New();

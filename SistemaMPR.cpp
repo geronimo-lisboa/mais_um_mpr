@@ -8,13 +8,16 @@ bool SistemaMPR::AreThingReadyToCreateMPR()
 			return false;
 	if (!imagem)
 		return false;
+	if (!vtkImage)
+		return false;
 	return true;
 }
 
 void SistemaMPR::SetUp()
 {
 	if (AreThingReadyToCreateMPR()) {
-
+		for (std::shared_ptr<TelaMPR> t : telasDoMpr)
+			t->CreateThings(vtkImage);
 	}
 }
 
@@ -23,6 +26,7 @@ SistemaMPR::SistemaMPR(char * idExame, char * idSerie)
 	this->idExame = idExame;
 	this->idSerie = idSerie;
 	imagem = nullptr;
+	vtkImage = nullptr;
 }
 
 void SistemaMPR::CreateRenderers(HWND handleTela01, HWND handleTela02, HWND handleTela03)
@@ -33,15 +37,58 @@ void SistemaMPR::CreateRenderers(HWND handleTela01, HWND handleTela02, HWND hand
 	SetUp();
 }
 
-void SistemaMPR::SetImage(itk::Image<short, 3>::Pointer img)
+void SistemaMPR::SetImage(itk::Image<short, 3>::Pointer img, vtkImageImport* vtkImage)
 {
 	imagem = img;
+	this->vtkImage = vtkImage;
 	SetUp();
 }
 
 void SistemaMPR::Resize(int w, int h, int qual)
 {
 	telasDoMpr[qual]->Resize(w, h);
+}
+
+void TelaMPR::CreateThings(vtkImageImport* image)
+{
+	//Criação de um plano pra testar como fica
+	planeSource1 = vtkSmartPointer<vtkCubeSource>::New();
+	planeSource1->SetXLength(100);
+	planeSource1->SetZLength(100);
+	planeSource1->SetYLength(1);
+	planeSourceMapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
+	planeSourceMapper1->SetInputConnection(planeSource1->GetOutputPort());
+	planeActor1 = vtkSmartPointer<vtkActor>::New();
+	planeActor1->SetMapper(planeSourceMapper1);
+	planeActor1->GetProperty()->SetColor(1, 0, 0);
+	rendererLayerWidget->AddActor(planeActor1);
+
+
+	planeSource2 = vtkSmartPointer<vtkCubeSource>::New();
+	planeSource2->SetXLength(1);
+	planeSource2->SetZLength(100);
+	planeSource2->SetYLength(100);
+	planeSourceMapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
+	planeSourceMapper2->SetInputConnection(planeSource2->GetOutputPort());
+	planeActor2 = vtkSmartPointer<vtkActor>::New();
+	planeActor2->SetMapper(planeSourceMapper2);
+	planeActor2->GetProperty()->SetColor(0, 1, 0);
+	rendererLayerWidget->AddActor(planeActor2);
+
+	dummyImagePlane = vtkSmartPointer<vtkCubeSource>::New();
+	dummyImagePlane->SetXLength(100);
+	dummyImagePlane->SetZLength(1);
+	dummyImagePlane->SetYLength(100);
+	dummyImagePlaneMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	dummyImagePlaneMapper->SetInputConnection(dummyImagePlane->GetOutputPort());
+	dummyActor = vtkSmartPointer<vtkActor>::New();
+	dummyActor->SetMapper(dummyImagePlaneMapper);
+	dummyActor->GetProperty()->SetColor(0, 0, 1);
+	dummyActor->PickableOff();
+
+	rendererLayerWidget->AddActor(dummyActor);
+
+	rendererLayerWidget->ResetCamera();
 }
 
 TelaMPR::TelaMPR(HWND handle)
@@ -71,14 +118,7 @@ TelaMPR::TelaMPR(HWND handle)
 	interactor->InstallMessageProcOn();
 	style = vtkSmartPointer<vtkInteractorStyleTrackballActor>::New();
 	interactor->SetInteractorStyle(style);
-	//Criação de um plano pra testar como fica
-	planeSource = vtkSmartPointer<vtkCubeSource>::New();
-	planeSourceMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-	planeSourceMapper->SetInputConnection(planeSource->GetOutputPort());
-	planeActor = vtkSmartPointer<vtkActor>::New();
-	planeActor->SetMapper(planeSourceMapper);
-	rendererLayerWidget->AddActor(planeActor);
-	rendererLayerWidget->ResetCamera();
+
 
 	renderWindow->Render();
 }
