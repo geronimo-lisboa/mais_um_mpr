@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "myResliceInteractionStyle.h"
+#include "SistemaMPR.h"
 
 /*=========================================================================
 
@@ -58,6 +59,7 @@ myResliceInteractionStyle::myResliceInteractionStyle()
 	isMousePressed = false;
 	propDoReslice1 = nullptr;
 	propDoReslice2 = nullptr;
+	sistema = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -482,6 +484,9 @@ void myResliceInteractionStyle::Spin()
 	}
 
 	rwi->Render();
+	auto m = vtkSmartPointer<vtkMatrix4x4>::New();
+	m->DeepCopy(propDoReslice1->GetMatrix());
+	sistema->SetMatrix(m);
 }
 
 //----------------------------------------------------------------------------

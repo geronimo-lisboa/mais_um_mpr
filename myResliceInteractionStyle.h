@@ -2,6 +2,8 @@
 #include "stdafx.h"
 class vtkCellPicker;
 
+class SistemaMPR;
+
 class myResliceInteractionStyle : public vtkInteractorStyle
 {
 public:
@@ -36,7 +38,11 @@ public:
 	void SetOperacao(int idBotao, int operacao);
 
 	void SetPropsDoReslice(vtkProp3D *p1, vtkProp3D *p2);
+	void SetSistema(SistemaMPR* sist) {
+		sistema = sist;
+	}
 protected:
+	SistemaMPR *sistema;
 	vtkProp3D *propDoReslice1, *propDoReslice2;
 
 	myResliceInteractionStyle();
