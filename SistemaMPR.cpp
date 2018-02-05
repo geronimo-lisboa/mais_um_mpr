@@ -89,6 +89,8 @@ void TelaMPR::CreateThings(vtkImageImport* image)
 	rendererLayerWidget->AddActor(dummyActor);
 
 	rendererLayerWidget->ResetCamera();
+
+	style->SetPropsDoReslice(planeActor1, planeActor2);
 }
 
 TelaMPR::TelaMPR(HWND handle)
@@ -118,7 +120,9 @@ TelaMPR::TelaMPR(HWND handle)
 	interactor->InstallMessageProcOn();
 	style = vtkSmartPointer<myResliceInteractionStyle>::New();
 	interactor->SetInteractorStyle(style);
-
+	style->SetOperacao(0, VTKIS_SPIN);
+	style->SetOperacao(1, VTKIS_SPIN);
+	style->SetOperacao(2, VTKIS_SPIN);
 
 	renderWindow->Render();
 }

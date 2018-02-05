@@ -37,6 +37,12 @@ void myResliceInteractionStyle::SetOperacao(int idBotao, int operacao)
 	OperacoesDoMouse[idBotao] = operacao;
 }
 
+void myResliceInteractionStyle::SetPropsDoReslice(vtkProp3D * p1, vtkProp3D * p2)
+{
+	propDoReslice1 = p1;
+	propDoReslice2 = p2;
+}
+
 //----------------------------------------------------------------------------
 myResliceInteractionStyle::myResliceInteractionStyle()
 {
@@ -50,6 +56,8 @@ myResliceInteractionStyle::myResliceInteractionStyle()
 	OperacoesDoMouse[1] = VTKIS_PAN;
 	OperacoesDoMouse[2] = VTKIS_SPIN;
 	isMousePressed = false;
+	propDoReslice1 = nullptr;
+	propDoReslice2 = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -407,21 +415,15 @@ void myResliceInteractionStyle::Rotate()
 //----------------------------------------------------------------------------
 void myResliceInteractionStyle::Spin()
 {
-	if (this->CurrentRenderer == nullptr || this->InteractionProp == nullptr)
-	{
+	if (this->CurrentRenderer == nullptr || this->InteractionProp == nullptr){
 		return;
 	}
-
 	vtkRenderWindowInteractor *rwi = this->Interactor;
 	vtkCamera *cam = this->CurrentRenderer->GetActiveCamera();
-
 	// Get the axis to rotate around = vector from eye to origin
-
 	double *obj_center = this->InteractionProp->GetCenter();
-
 	double motion_vector[3];
 	double view_point[3];
-
 	if (cam->GetParallelProjection())
 	{
 		// If parallel projection, want to get the view plane normal...
@@ -437,19 +439,10 @@ void myResliceInteractionStyle::Spin()
 		motion_vector[2] = view_point[2] - obj_center[2];
 		vtkMath::Normalize(motion_vector);
 	}
-
 	double disp_obj_center[3];
-
-	this->ComputeWorldToDisplay(obj_center[0], obj_center[1], obj_center[2],
-		disp_obj_center);
-
-	double newAngle =
-		vtkMath::DegreesFromRadians(atan2(rwi->GetEventPosition()[1] - disp_obj_center[1],
-			rwi->GetEventPosition()[0] - disp_obj_center[0]));
-
-	double oldAngle =
-		vtkMath::DegreesFromRadians(atan2(rwi->GetLastEventPosition()[1] - disp_obj_center[1],
-			rwi->GetLastEventPosition()[0] - disp_obj_center[0]));
+	this->ComputeWorldToDisplay(obj_center[0], obj_center[1], obj_center[2], disp_obj_center);
+	double newAngle = vtkMath::DegreesFromRadians(atan2(rwi->GetEventPosition()[1] - disp_obj_center[1], rwi->GetEventPosition()[0] - disp_obj_center[0]));
+	double oldAngle = vtkMath::DegreesFromRadians(atan2(rwi->GetLastEventPosition()[1] - disp_obj_center[1], rwi->GetLastEventPosition()[0] - disp_obj_center[0]));
 
 	double scale[3];
 	scale[0] = scale[1] = scale[2] = 1.0;
@@ -462,11 +455,23 @@ void myResliceInteractionStyle::Spin()
 	rotate[0][2] = motion_vector[1];
 	rotate[0][3] = motion_vector[2];
 
-	this->Prop3DTransform(this->InteractionProp,
+	this->Prop3DTransform(this->propDoReslice1,
 		obj_center,
 		1,
 		rotate,
 		scale);
+
+	this->Prop3DTransform(this->propDoReslice2,
+		obj_center,
+		1,
+		rotate,
+		scale);
+
+	//this->Prop3DTransform(this->InteractionProp,
+	//	obj_center,
+	//	1,
+	//	rotate,
+	//	scale);
 
 	delete[] rotate[0];
 	delete[] rotate;
@@ -573,25 +578,28 @@ void myResliceInteractionStyle::Dolly()
 	motion_vector[1] = (view_point[1] - view_focus[1]) * dollyFactor;
 	motion_vector[2] = (view_point[2] - view_focus[2]) * dollyFactor;
 
-	if (this->InteractionProp->GetUserMatrix() != nullptr)
-	{
-		vtkTransform *t = vtkTransform::New();
-		t->PostMultiply();
-		t->SetMatrix(this->InteractionProp->GetUserMatrix());
-		t->Translate(motion_vector[0], motion_vector[1],
-			motion_vector[2]);
-		this->InteractionProp->GetUserMatrix()->DeepCopy(t->GetMatrix());
-		t->Delete();
-	}
-	else
-	{
-		this->InteractionProp->AddPosition(motion_vector);
-	}
 
-	if (this->AutoAdjustCameraClippingRange)
-	{
-		this->CurrentRenderer->ResetCameraClippingRange();
-	}
+
+
+	////-----
+	//if (this->InteractionProp->GetUserMatrix() != nullptr)
+	//{
+	//	vtkTransform *t = vtkTransform::New();
+	//	t->PostMultiply();
+	//	t->SetMatrix(this->InteractionProp->GetUserMatrix());
+	//	t->Translate(motion_vector[0], motion_vector[1],
+	//		motion_vector[2]);
+	//	this->InteractionProp->GetUserMatrix()->DeepCopy(t->GetMatrix());
+	//	t->Delete();
+	//}
+	//else
+	//{
+	//	this->InteractionProp->AddPosition(motion_vector);
+	//}
+	//if (this->AutoAdjustCameraClippingRange)
+	//{
+	//	this->CurrentRenderer->ResetCameraClippingRange();
+	//}
 
 	rwi->Render();
 }

@@ -34,7 +34,11 @@ public:
 	void UniformScale() override;
 
 	void SetOperacao(int idBotao, int operacao);
+
+	void SetPropsDoReslice(vtkProp3D *p1, vtkProp3D *p2);
 protected:
+	vtkProp3D *propDoReslice1, *propDoReslice2;
+
 	myResliceInteractionStyle();
 	~myResliceInteractionStyle() override;
 
