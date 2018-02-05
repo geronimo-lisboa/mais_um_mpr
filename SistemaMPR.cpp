@@ -44,6 +44,43 @@ void SistemaMPR::SetImage(itk::Image<short, 3>::Pointer img, vtkImageImport* vtk
 	SetUp();
 }
 
+vtkSmartPointer<vtkTransform> CreateInitialTransformU() {
+	auto mat1 = vtkSmartPointer<vtkMatrix4x4>::New();
+	mat1->Element[0][0] = 1; mat1->Element[0][1] = 0; mat1->Element[0][2] = 0; mat1->Element[0][3] = 0;
+	mat1->Element[1][0] = 0; mat1->Element[1][1] = 1; mat1->Element[1][2] = 0; mat1->Element[1][3] = 0;
+	mat1->Element[2][0] = 0; mat1->Element[2][1] = 0; mat1->Element[2][2] = 1; mat1->Element[2][3] = 0;
+	mat1->Element[3][0] = 0; mat1->Element[3][1] = 0; mat1->Element[3][2] = 0; mat1->Element[3][3] = 1;
+	auto trans01 = vtkSmartPointer<vtkTransform>::New();
+	trans01->SetMatrix(mat1);
+	trans01->Update();
+	return trans01;
+}
+
+vtkSmartPointer<vtkTransform> CreateInitialTransformV() {
+	auto mat3 = vtkSmartPointer<vtkMatrix4x4>::New();
+	mat3->Element[0][0] = 0; mat3->Element[0][1] = 1; mat3->Element[0][2] = 0; mat3->Element[0][3] = 0;
+	mat3->Element[1][0] = 0; mat3->Element[1][1] = 0; mat3->Element[1][2] = 1; mat3->Element[1][3] = 0;
+	mat3->Element[2][0] = 1; mat3->Element[2][1] = 0; mat3->Element[2][2] = 0; mat3->Element[2][3] = 0;
+	mat3->Element[3][0] = 0; mat3->Element[3][1] = 0; mat3->Element[3][2] = 0; mat3->Element[3][3] = 1;
+	auto trans03 = vtkSmartPointer<vtkTransform>::New();
+	trans03->SetMatrix(mat3);
+	trans03->Update();
+	return trans03;
+}
+
+vtkSmartPointer<vtkTransform> CreateInitialTransformW() {
+	auto mat2 = vtkSmartPointer<vtkMatrix4x4>::New();
+	mat2->Element[0][0] = 0; mat2->Element[0][1] = 0; mat2->Element[0][2] = 1; mat2->Element[0][3] = 0;
+	mat2->Element[1][0] = 1; mat2->Element[1][1] = 0; mat2->Element[1][2] = 0; mat2->Element[1][3] = 0;
+	mat2->Element[2][0] = 0; mat2->Element[2][1] = 1; mat2->Element[2][2] = 0; mat2->Element[2][3] = 0;
+	mat2->Element[3][0] = 0; mat2->Element[3][1] = 0; mat2->Element[3][2] = 0; mat2->Element[3][3] = 1;
+	auto trans02 = vtkSmartPointer<vtkTransform>::New();
+	trans02->SetMatrix(mat2);
+	trans02->Update();
+	return trans02;
+}
+
+
 void SistemaMPR::Resize(int w, int h, int qual)
 {
 	telasDoMpr[qual]->Resize(w, h);
@@ -54,38 +91,39 @@ void TelaMPR::CreateThings(vtkImageImport* image)
 	//Criação de um plano pra testar como fica
 	planeSource1 = vtkSmartPointer<vtkCubeSource>::New();
 	planeSource1->SetXLength(100);
+	planeSource1->SetYLength(5);
 	planeSource1->SetZLength(100);
-	planeSource1->SetYLength(1);
 	planeSourceMapper1 = vtkSmartPointer<vtkPolyDataMapper>::New();
 	planeSourceMapper1->SetInputConnection(planeSource1->GetOutputPort());
 	planeActor1 = vtkSmartPointer<vtkActor>::New();
 	planeActor1->SetMapper(planeSourceMapper1);
 	planeActor1->GetProperty()->SetColor(1, 0, 0);
+	planeActor1->SetUserTransform(CreateInitialTransformU());
 	rendererLayerWidget->AddActor(planeActor1);
-
-
+	
 	planeSource2 = vtkSmartPointer<vtkCubeSource>::New();
-	planeSource2->SetXLength(1);
+	planeSource2->SetXLength(100);
+	planeSource2->SetYLength(5);
 	planeSource2->SetZLength(100);
-	planeSource2->SetYLength(100);
 	planeSourceMapper2 = vtkSmartPointer<vtkPolyDataMapper>::New();
 	planeSourceMapper2->SetInputConnection(planeSource2->GetOutputPort());
 	planeActor2 = vtkSmartPointer<vtkActor>::New();
 	planeActor2->SetMapper(planeSourceMapper2);
 	planeActor2->GetProperty()->SetColor(0, 1, 0);
+	planeActor2->SetUserTransform(CreateInitialTransformV());
 	rendererLayerWidget->AddActor(planeActor2);
-
+	
 	dummyImagePlane = vtkSmartPointer<vtkCubeSource>::New();
 	dummyImagePlane->SetXLength(100);
-	dummyImagePlane->SetZLength(1);
-	dummyImagePlane->SetYLength(100);
+	dummyImagePlane->SetYLength(5);
+	dummyImagePlane->SetZLength(100);
 	dummyImagePlaneMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 	dummyImagePlaneMapper->SetInputConnection(dummyImagePlane->GetOutputPort());
 	dummyActor = vtkSmartPointer<vtkActor>::New();
 	dummyActor->SetMapper(dummyImagePlaneMapper);
 	dummyActor->GetProperty()->SetColor(0, 0, 1);
 	dummyActor->PickableOff();
-
+	dummyActor->SetUserTransform(CreateInitialTransformW());
 	rendererLayerWidget->AddActor(dummyActor);
 
 	rendererLayerWidget->ResetCamera();
@@ -117,7 +155,10 @@ TelaMPR::TelaMPR(HWND handle)
 	interactor->SetRenderWindow(renderWindow);
 	interactor->InstallMessageProcOn();
 	style = vtkSmartPointer<myResliceInteractionStyle>::New();
-	interactor->SetInteractorStyle(style);
+	style->SetOperacao(0, VTKIS_SPIN);
+	style->SetOperacao(1, VTKIS_SPIN);
+	style->SetOperacao(2, VTKIS_SPIN);
+	//interactor->SetInteractorStyle(style);
 
 
 	renderWindow->Render();
